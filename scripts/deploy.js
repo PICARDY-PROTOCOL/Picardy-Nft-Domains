@@ -20,6 +20,14 @@ async function main() {
     "PicardyDomainHub"
   );
 
+  const PicardyDomainResolver = await hre.ethers.getContractFactory(
+    "PicardyDomainResolver"
+  );
+
+  const PicardySBTDomainResolver = await hre.ethers.getContractFactory(
+    "PicardySBTDomainResolver"
+  );
+
   const ForbiddenTlds = await hre.ethers.getContractFactory("ForbiddenTldsV2");
 
   const metadataAddress = "0xea828d703DE8e98109FE2d1358Ab92b1E55bDCb4";
@@ -29,6 +37,20 @@ async function main() {
   const picardyHub = await PicardyDomainHub.deploy(metadataAddress);
   await picardyHub.deployed();
   const hubAddress = picardyHub.address;
+
+  const picardyResolver = await upgrades.deployProxy(PicardyDomainResolver);
+  const domainSbtResolver = await upgrades.deployProxy(
+    PicardySBTDomainResolver
+  );
+  await picardyResolver.deployed();
+  await domainSbtResolver.deployed();
+  const resolverAddress = picardyResolver.address;
+  const domainSbtResolverAddress = domainSbtResolver.address;
+  console.log("resolver Address:", resolverAddress);
+  console.log("domain Sbt resolver address:", domainSbtResolverAddress);
+
+  await picardyResolver.addHubAddress(hubAddress, { gasLimit: 1000000 });
+  await domainSbtResolver.addHubAddress(hubAddress, { gasLimit: 1000000 });
 
   const forbiddenTlds = await ForbiddenTlds.deploy(hubAddress);
   await forbiddenTlds.deployed();
@@ -43,6 +65,8 @@ async function main() {
   );
   await picardyFactory.deployed();
   const factoryAddress = picardyFactory.address;
+
+  await picardyResolver.addFactoryAddress(factoryAddress);
 
   await forbiddenTlds.addFactoryAddress(factoryAddress);
 
@@ -68,6 +92,7 @@ async function main() {
   );
   await picardySBTFactory.deployed();
   const sbtFactoryAddress = picardySBTFactory.address;
+  await domainSbtResolver.addFactoryAddress(sbtFactoryAddress);
 
   console.log("picardyDomainSBTFactory deployed to: ", sbtFactoryAddress);
 
@@ -80,10 +105,12 @@ async function main() {
   await sbtToogle.wait();
 
   // Deployed to mumbai testnet
-  // picardyDomainHub deployed to:  0x519D7D7e78648FADAA9274a4d41E62C52DE0A293
-  // picardyDomainFactory deployed to:  0x6F098901161eE4dE9a584A17A93fFBfB40545144
-  // forbiddenTlds deployed to:  0x165bAAd4C6d924CfD4C36186E3B0f4DBbF3233dF
-  // picardyDomainSBTFactory deployed to:  0xF6D2F3F90E29D7f6Af7e4A72C1EF5394650Dc65D
+  // resolver Address: 0x557ad8C374aE2663AF6db3d2cD4C42f79FcF0324
+  // domain Sbt resolver address: 0xc7b63c3F1212E063C386a2C05A171Db3217A99Ab
+  // picardyDomainHub deployed to:  0x718cFF78Fa43615cDF1c43415b9C7A63c8cA9814
+  // picardyDomainFactory deployed to:  0x311F7f66f35BA7242F1FE5ae0d45eD51145Fa688
+  // forbiddenTlds deployed to:  0x37DbCC4f8D5672Ae624d1c92d53a700790009a5E
+  // picardyDomainSBTFactory deployed to:  0x71D60c6E3723a4a9Cc351cC28Cd2C818Bf19e2D2
 }
 
 // We recommend this pattern to be able to use async/await everywhere

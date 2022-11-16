@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
-
 import "@openzeppelin/contracts/utils/Context.sol";
-import {IPicardyDomainHub} from "./interface/IPicardyDomainHub.sol";
+import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
 
-contract ForbiddenTlds is Context {
-  /// this contract is used to store the list of forbidden TLDs 
+///@title PicardyDomainFactoryV2
+///@author blok-hamster
+contract ForbiddenTldsV2 is Context {
+/// @notice the purpose of this contract is to store the list of forbidden TLDs or already created TLDs
 
   mapping (string => bool) public forbidden; // forbidden TLDs
   mapping (address => bool) public factoryAddresses; // list of TLD factories that are allowed to add forbidden TLDs
-  address picardyDomainHub;
 
   event ForbiddenTldAdded(address indexed sender, string indexed tldName);
   event ForbiddenTldRemoved(address indexed sender, string indexed tldName);
@@ -17,18 +17,24 @@ contract ForbiddenTlds is Context {
   event FactoryAddressAdded(address indexed sender, address indexed fAddress);
   event FactoryAddressRemoved(address indexed sender, address indexed fAddress);
 
-   modifier onlyHubAdmin{
+  modifier onlyFactory {
+      require(factoryAddresses[msg.sender] == true, "Caller is not a factory address.");
+      _;
+   }
+
+    modifier onlyHubAdmin{
     _isHubAdmain();
     _;
   }
 
-  constructor(address _picardyDomainHub) {
+    IPicardyDomainHub domainHub;
+  constructor(address _domainHub) {
     forbidden[".eth"] = true;
-    forbidden[".net"] = true;
-    forbidden[".xyz"] = true;
     forbidden[".com"] = true;
     forbidden[".org"] = true;
-    picardyDomainHub = _picardyDomainHub;
+    forbidden[".net"] = true;
+    forbidden[".xyz"] = true;
+    domainHub = IPicardyDomainHub(_domainHub);
   }
 
   // PUBLIC
@@ -37,13 +43,13 @@ contract ForbiddenTlds is Context {
   }
 
   // FACTORY
-  function addForbiddenTld(string memory _name) external onlyHubAdmin {
+  function addForbiddenTld(string memory _name) external onlyFactory {
     forbidden[_name] = true;
     emit ForbiddenTldAdded(msg.sender, _name);
   }
 
   // OWNER
-  function adminAddForbiddenTld(string memory _name) external onlyHubAdmin {
+  function ownerAddForbiddenTld(string memory _name) external onlyHubAdmin {
     forbidden[_name] = true;
     emit ForbiddenTldAdded(msg.sender, _name);
   }
@@ -64,6 +70,6 @@ contract ForbiddenTlds is Context {
   }
 
   function _isHubAdmain() internal {
-    require(IPicardyDomainHub(picardyDomainHub).checkHubAdmin(_msgSender()), "Not Hub Admin");
-  }
+        require(domainHub.checkHubAdmin(_msgSender()), "Not Hub Admin");
+    }
 }

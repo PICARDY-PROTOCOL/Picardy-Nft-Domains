@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "./lib/strings.sol";
+import "../lib/strings.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import {IForbiddenTlds} from "./interface/IForbiddenTlds.sol";
-import {IPicardyDomainHub} from "./interface/IPicardyDomainHub.sol";
-import {IPicardyDomainFactory} from "./interface/IPicardyDomainFactory.sol";
-import "./PicardyDomain.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IForbiddenTlds} from "../interface/IForbiddenTlds.sol";
+import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
+import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
+import {IRandomNumberGen} from "../interface/IRandomNumberGen.sol";
+import {IPicardyDomainSBT} from "../interface/IPicardyDomainSBT.sol";
+import "./PicardyDomainSBT.sol";
 
 /// @title Picardy Domain Factory
 /// @author Blok_hamster
 /// @notice Factory contract dynamically new domain contracts.
-contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Context{
+contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Context{
   using strings for string;
 
   string[] public tlds; // existing TLDs
@@ -36,6 +39,8 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
 
   IPicardyDomainHub public domainHub;
   address royaltyAddress;
+  address randomNumberAddress;
+  address linkToken;
 
   constructor(
     uint256 _price, 
@@ -54,6 +59,10 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
   // READ
   function getTldsArray() public override view returns(string[] memory) {
     return tlds;
+  }
+
+  function getRandomNumberGen() public view returns(address){
+    return randomNumberAddress;
   }
 
   function _validTldName(string memory _name) view internal {
@@ -106,7 +115,7 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
 
     _validTldName(_name);
 
-   PicardyDomain tld = new PicardyDomain(
+   PicardyDomainSBT tld = new PicardyDomainSBT(
       _name, 
       _symbol, 
       _tldOwner, 
@@ -127,11 +136,53 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
     return address(tld);
   }
 
+  function requestRandomNumber(uint32 numWords) external returns(uint256) {
+    IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
+    require(IERC20(linkToken).balanceOf(address(this)) >= randomNumberGen.fee() * 10**18, "Factory: Not enough LINK");
+    require(IERC20(linkToken).balanceOf(msg.sender) >= randomNumberGen.fee() * 10**18, "User: Not enough LINK");
+    IERC20(linkToken).transfer(address(this), randomNumberGen.fee());
+    uint256 requestId = randomNumberGen.requestRandomNumber(numWords);
+    return requestId;
+  }
+
+  //This function should be called by once. It changes the state of the random number generator
+  function getRandNumber(uint256 _requestId, string calldata _domainName, string calldata _tldName) external returns(uint256[] memory, bytes32) {
+    IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
+    IPicardyDomainSBT sbtDomain = IPicardyDomainSBT(tldNamesAddresses[_tldName]);
+    require(sbtDomain.getDomainHolder(_domainName) == msg.sender, "not domain holder");
+    (,uint256 _tokenId, , , ) = sbtDomain.domains(strings.lower(_domainName));
+    uint256[] memory randomNumbers = randomNumberGen.getRandomNumber(_requestId);
+    uint256 _seed;
+    if(_isEven(_tokenId)) {
+      _seed = randomNumbers[1];
+    } else {
+      _seed = randomNumbers[0];
+    }
+    (bytes32 nullifier, ) = sbtDomain.updateHasProof(_domainName, _seed);
+    return (randomNumbers, nullifier);
+  }
+
+  function _isEven(uint256 _tokenId) internal pure returns (bool) {
+    if (_tokenId % 2 == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // OWNER
 
   /// @notice only hub admin can change the ForbiddenTlds contract address.
   function changeForbiddenTldsAddress(address _forbiddenTlds) external onlyHubAdmin {
     forbiddenTlds = _forbiddenTlds;
+  }
+
+  function addLinkToken(address _linkToken) external onlyHubAdmin {
+    linkToken = _linkToken;
+  }
+
+  function updateRandomNumberAddress(address _randNumAddr) external onlyHubAdmin {
+    randomNumberAddress = _randNumAddr;
   }
 
   /// @notice only hub admin can change the metadata contract address.

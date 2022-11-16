@@ -9,7 +9,8 @@ interface IPicardyDomainSBT is IERC4973 {
     string name; // domain name that goes before the TLD name; example: "tempetechie" in "tempetechie.web3"
     uint256 tokenId;
     address holder;
-    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."], "url": "https://punk.domains"}
+    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@example", "friends": ["0x123..."], "url": "https://picardy.io"}
+    bool hasProof;
   }
 
   event DomainCreated(address indexed user, address indexed owner, string fullDomainName);
@@ -21,7 +22,7 @@ interface IPicardyDomainSBT is IERC4973 {
   event TldRoyaltyChanged(address indexed user, uint256 tldRoyalty);
   event DomainBuyingToggle(address indexed user, bool domainBuyingToggle);
 
-  function domains(string calldata _domainName) external view returns(string memory, uint256, address, string memory);
+  function domains(string calldata _domainName) external view returns(string memory, uint256, address, string memory, bool);
 
   function defaultNames(address) external view returns(string memory);
 
@@ -39,9 +40,14 @@ interface IPicardyDomainSBT is IERC4973 {
 
   function changePrice(uint256 _price) external;
 
+  function updateHasProof(string calldata _domainName, uint256 _seed) external returns(bytes32, bool);
+
+  function getHasProof(string calldata _domainName) external view returns(bool);
+
   function mint(
     string memory _domainName,
-    address _domainHolder
+    address _domainHolder,
+    address _soulWallet
   ) external payable returns(uint256);
 
 }

@@ -2,12 +2,10 @@
 pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
-import "./lib/strings.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 ///@author blok-hamster
 contract PicardyDomainHub is AccessControlEnumerable {
-    using strings for string;
 
     event FactoryAddressAdded(address indexed sender, address indexed fAddress);
    

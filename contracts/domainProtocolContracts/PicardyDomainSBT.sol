@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import { IPicardyDomainMetadata } from "./interface/IPicardyDomainMetadata.sol";
-import {IPicardyDomainFactory} from "./interface/IPicardyDomainFactory.sol";
-import {IPicardyDomain} from "./interface/IPicardyDomain.sol";
-import "./lib/strings.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { IPicardyDomainMetadata } from "../interface/IPicardyDomainMetadata.sol";
+import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
+import {IPicardyDomainSBT} from "../interface/IPicardyDomainSBT.sol";
+import "../lib/strings.sol";
+import {ERC4973} from  "../sbt/ERC4973.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 /// @title Picardy Domain contract
 /// @author Blok_hamster
 /// @notice Dynamically generated NFT Domain Contract
-contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
+contract PicardyDomainSBT is IPicardyDomainSBT, ERC4973, Ownable, ReentrancyGuard {
   using strings for string;
 
   // Domain struct is defined in IPicardyDomain
@@ -34,6 +34,7 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   mapping (string => Domain) public override domains; 
   mapping (uint256 => string) public domainIdsNames; 
   mapping (address => string) public override defaultNames; // user's default domain
+  mapping (bytes32 => bool) public nullifierExixt; // check nullifier
 
   event MintingDisabledForever(address user);
 
@@ -45,13 +46,26 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
     bool _buyingEnabled,
     address _factoryAddress,
     address _metadataAddress
-  ) ERC721(_name, _symbol) {
+  ) ERC4973(_name, _symbol) {
     price = _domainPrice;
     buyingEnabled = _buyingEnabled;
     metadataAddress = _metadataAddress;
     factoryAddress = _factoryAddress;
 
     transferOwnership(_tldOwner);
+  }
+
+  function updateHasProof(string calldata _domainName, uint256 _seed) external returns(bytes32, bool) {
+    require(msg.sender == factoryAddress, "PicardyDomainSBT: Only factory can update hasProof");
+    require(domains[strings.lower(_domainName)].hasProof == false, "Domain already has proof");
+    bytes32 newNullifier = nullifier(_domainName, _seed);
+    nullifierExixt[newNullifier] = true;
+    domains[strings.lower(_domainName)].hasProof = true;
+    return (newNullifier, true);
+  }
+
+  function nullifier(string calldata _domainName, uint256 _seed) internal view returns (bytes32) {
+    return keccak256(abi.encodePacked(_domainName, domains[strings.lower(_domainName)].tokenId, _seed));
   }
 
   // READ
@@ -67,6 +81,10 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
 
   function getDomainTokenId(string calldata _domainName) public override view returns(uint256) {
     return domains[strings.lower(_domainName)].tokenId;
+  }
+
+  function getHasProof(string calldata _domainName) public view returns(bool) {
+    return domains[strings.lower(_domainName)].hasProof;
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -86,7 +104,7 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   /// @notice This distroys the domain name
   function burn(string calldata _domainName) external {
     string memory dName = strings.lower(_domainName);
-    require(domains[dName].holder == _msgSender(), "You do not own the selected domain");
+    require(domains[dName].holder == _msgSender() || _msgSender() == owner(), "You do not own the selected domain");
     uint256 tokenId = domains[dName].tokenId;
     delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
     delete domains[dName]; // delete string => Domain struct mapping
@@ -122,7 +140,8 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   /// @return token ID
   function mint(
     string memory _domainName,
-    address _domainHolder
+    address _domainHolder,
+    address _soulWallet
   ) external payable nonReentrant returns(uint256) {
     require(!buyingDisabledForever, "Domain minting disabled forever");
     require(buyingEnabled || _msgSender() == owner() || _msgSender() == minter, "Buying domains disabled");
@@ -130,12 +149,13 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
 
     _sendPayment(msg.value);
 
-    return _mintDomain(_domainName, _domainHolder, "");
+    return _mintDomain(_domainName, _domainHolder, _soulWallet, "");
   }
 
   function _mintDomain(
     string memory _domainNameRaw, 
     address _domainHolder,
+    address _soulWallet,
     string memory _data
   ) internal returns(uint256) {
     // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
@@ -147,7 +167,7 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(" ")) == 0, "There should be no spaces in the name");
     require(domains[_domainName].holder == address(0), "Domain with this name already exists");
 
-    _mint(_domainHolder, idCounter);
+    _mint(_soulWallet, idCounter, "");
 
     Domain memory newDomain; // Domain struct is defined in IPicardyDomain
     
@@ -186,22 +206,6 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
     require(sent, "Failed to send domain payment to TLD owner");
   }
 
-  ///@dev Hook that is called before any token transfer. This includes minting and burning.
-  function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
-
-    if (from != address(0)) { // run on every transfer but not on mint
-      domains[domainIdsNames[tokenId]].holder = to; // change holder address in Domain struct
-      
-      if (bytes(defaultNames[to]).length == 0 && to != address(0)) {
-        defaultNames[to] = domains[domainIdsNames[tokenId]].name; // if default domain name is not set for that holder, set it now
-      }
-
-      if (strings.equals(strings.toSlice(domains[domainIdsNames[tokenId]].name), strings.toSlice(defaultNames[from]))) {
-        delete defaultNames[from]; // if previous owner had this domain name as default, unset it as default
-      }
-    }
-    
-  }
 
   // OWNER
 

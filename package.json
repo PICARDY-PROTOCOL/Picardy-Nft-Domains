@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@chainlink/contracts": "^0.5.1",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.0",
     "@openzeppelin/contracts": "^4.7.3",
@@ -14,6 +15,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
     "hardhat": "^2.11.1"
   },
   "scripts": {

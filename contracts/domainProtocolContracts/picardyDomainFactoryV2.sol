@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "./lib/strings.sol";
+import "../lib/strings.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import {IForbiddenTlds} from "./interface/IForbiddenTlds.sol";
-import {IPicardyDomainHub} from "./interface/IPicardyDomainHub.sol";
-import {IPicardyDomainFactory} from "./interface/IPicardyDomainFactory.sol";
-import "./PicardyDomainSBT.sol";
+import {IForbiddenTlds} from "../interface/IForbiddenTlds.sol";
+import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
+import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
+import "./PicardyDomain.sol";
 
 /// @title Picardy Domain Factory
 /// @author Blok_hamster
 /// @notice Factory contract dynamically new domain contracts.
-contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Context{
+contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Context{
   using strings for string;
 
   string[] public tlds; // existing TLDs
@@ -106,7 +106,7 @@ contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Cont
 
     _validTldName(_name);
 
-   PicardyDomainSBT tld = new PicardyDomainSBT(
+   PicardyDomain tld = new PicardyDomain(
       _name, 
       _symbol, 
       _tldOwner, 

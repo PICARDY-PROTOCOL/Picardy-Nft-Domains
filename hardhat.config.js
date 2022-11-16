@@ -2,6 +2,7 @@ const { task } = require("hardhat/config");
 
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
+require("@openzeppelin/hardhat-upgrades");
 
 const dotenv = require("dotenv").config();
 const privateKey = process.env.PRIVATE_KEY;

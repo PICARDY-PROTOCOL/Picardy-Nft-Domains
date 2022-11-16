@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 interface IPicardyDomain is IERC721 {
 
   struct Domain {
-    string name; // domain name that goes before the TLD name; example: "tempetechie" in "tempetechie.web3"
+    string name; // domain name that goes before the TLD name; example: "blokhamster" in "blokhamster.web3"
     uint256 tokenId;
     address holder;
-    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."], "url": "https://punk.domains"}
+    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@me123", "friends": ["0x123..."], "url": "https://picardy.io"}
   }
 
   event DomainCreated(address indexed user, address indexed owner, string fullDomainName);

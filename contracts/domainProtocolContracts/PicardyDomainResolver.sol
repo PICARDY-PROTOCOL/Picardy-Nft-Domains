@@ -3,26 +3,27 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {IPicardyDomainFactory} from "./interface/IPicardyDomainFactory.sol";
-import {IPicardyDomainSBT} from "./interface/IPicardyDomainSBT.sol";
-import {IPicardyDomainHub} from "./interface/IPicardyDomainHub.sol";
-import "./lib/strings.sol";
+import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
+import {IPicardyDomain} from "../interface/IPicardyDomain.sol";
+import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
+import "../lib/strings.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
-contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
+contract PicardyDomainResolver is Initializable, OwnableUpgradeable {
   using strings for string;
 
-  mapping (address => bool) public isTldDeprecated; // deprecate address map
+  mapping (address => bool) public isTldDeprecated; 
   address[] public factories;
-    address hubAddress;
+  address hubAddress;
 
-    event HubAdded(address owner);
+  event HubAdded(address owner);
   event FactoryAddressAdded(address user, address fAddr);
   event DeprecatedTldAdded(address user, address tAddr);
   event DeprecatedTldRemoved(address user, address tAddr);
+  
 
-      modifier onlyHubAdmin{
+    modifier onlyHubAdmin(){
     _isHubAdmain();
     _;
   }
@@ -32,21 +33,19 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
     __Ownable_init_unchained();
   }
 
-    
-    function addHubAddress(address _hubAddress) public {
-        require(_msgSender() == owner(), "only owner can add hub");
-        hubAddress = _hubAddress;
-        emit HubAdded(_msgSender());
-    }
+  function addHubAddress(address _hubAddress) public {
+      require(_msgSender() == owner(), "only owner can add hub");
+      hubAddress = _hubAddress;
+      emit HubAdded(_msgSender());
+  }
 
-  // reverse resolver: get user's default name for a given TLD
   function getDefaultDomain(address _addr, string calldata _tld) public view returns(string memory) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IPicardyDomainFactory(factories[i]).tldNamesAddresses(_tld);
 
       if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
-        return string(IPicardyDomainSBT(tldAddr).defaultNames(_addr));
+        return string(IPicardyDomain(tldAddr).defaultNames(_addr));
       }
 
       unchecked { ++i; }
@@ -55,7 +54,6 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
     return "";
   }
 
-  // reverse resolver: GET ALL SBT TLDS HELD BY A USER (all TLDs)
   function getDefaultDomains(address _addr) public view returns(string memory) {
     bytes memory result;
 
@@ -66,13 +64,13 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
       for (uint256 j = 0; j < tldNames.length; ++j) {
         string memory tldName = tldNames[j];
         address tldAddr = IPicardyDomainFactory(factories[i]).tldNamesAddresses(tldName);
-        string memory defaultName = IPicardyDomainSBT(tldAddr).defaultNames(_addr);
+        string memory defaultName = IPicardyDomain(tldAddr).defaultNames(_addr);
 
         if (
           strings.len(strings.toSlice(defaultName)) > 0 && 
           !isTldDeprecated[tldAddr]
         ) {
-          if (j == (tldNames.length-1)) { // last TLD (do not include space at the end)
+          if (j == (tldNames.length-1)) {
             result = abi.encodePacked(result, defaultName, tldName);
           } else {
             result = abi.encodePacked(result, defaultName, tldName, " ");
@@ -93,7 +91,7 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
       address tldAddr = IPicardyDomainFactory(factories[i]).tldNamesAddresses(_tld);
 
       if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
-        return address(IPicardyDomainSBT(tldAddr).getDomainHolder(_domainName));
+        return address(IPicardyDomain(tldAddr).getDomainHolder(_domainName));
       }
 
       unchecked { ++i; }
@@ -109,7 +107,7 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
       address tldAddr = IPicardyDomainFactory(factories[i]).tldNamesAddresses(_tld);
 
       if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
-        return string(IPicardyDomainSBT(tldAddr).getDomainData(_domainName));
+        return string(IPicardyDomain(tldAddr).getDomainData(_domainName));
       }
 
       unchecked { ++i; }
@@ -125,7 +123,7 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
       address tldAddr = IPicardyDomainFactory(factories[i]).tldNamesAddresses(_tld);
 
       if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
-        (, uint256 _tokenId, , ) = IPicardyDomainSBT(tldAddr).domains(_domainName);
+        (, uint256 _tokenId, , ) = IPicardyDomain(tldAddr).domains(_domainName);
         return IERC721Metadata(tldAddr).tokenURI(_tokenId);
       }
 
@@ -148,7 +146,7 @@ contract PicardySBTDomainResolver is Initializable, OwnableUpgradeable {
       for (uint256 j = 0; j < tldNames.length; ++j) {
         string memory tldName = tldNames[j];
         address tldAddr = IPicardyDomainFactory(factories[i]).tldNamesAddresses(tldName);
-        string memory defaultName = IPicardyDomainSBT(tldAddr).defaultNames(_addr);
+        string memory defaultName = IPicardyDomain(tldAddr).defaultNames(_addr);
 
         if (
           strings.len(strings.toSlice(defaultName)) > 0 && 
