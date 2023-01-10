@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 interface IPicardyDomainMetadata {
 
-  function getMetadata(string calldata _domainName, string calldata _tld, uint _tokenId) external view returns(string memory);
+  function getMetadata(string calldata _domainName, string calldata _tld, uint _tokenId, address _tldAddress) external view returns(string memory);
 
 
 }

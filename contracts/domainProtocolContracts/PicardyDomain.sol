@@ -73,7 +73,8 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
     return IPicardyDomainMetadata(metadataAddress).getMetadata(
       domains[domainIdsNames[_tokenId]].name, 
       name(),
-      _tokenId
+      _tokenId,
+      address(this)
     );
   }
 

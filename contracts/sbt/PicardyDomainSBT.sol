@@ -5,7 +5,7 @@ import { IPicardyDomainMetadata } from "../interface/IPicardyDomainMetadata.sol"
 import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
 import {IPicardyDomainSBT} from "../interface/IPicardyDomainSBT.sol";
 import "../lib/strings.sol";
-import {ERC4973} from  "../sbt/ERC4973.sol";
+import "./ERC4973.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -91,7 +91,8 @@ contract PicardyDomainSBT is IPicardyDomainSBT, ERC4973, Ownable, ReentrancyGuar
     return IPicardyDomainMetadata(metadataAddress).getMetadata(
       domains[domainIdsNames[_tokenId]].name, 
       name(),
-      _tokenId
+      _tokenId,
+      address(this)
     );
   }
 

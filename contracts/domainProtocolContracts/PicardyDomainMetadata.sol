@@ -16,14 +16,14 @@ contract PicardyDomainMetadata is Context {
   event DescriptionChanged(address indexed user, string description);
 
   // READ
-  function getMetadata(string calldata _domainName, string calldata _tld, uint tokenId) public view returns(string memory) {
+  function getMetadata(string calldata _domainName, string calldata _tld, uint tokenId, address _tldAddress) public view returns(string memory) {
     string memory fullDomainName = string(abi.encodePacked(_domainName, _tld));
 
     if (tokenId % 2 == 0){
           return string(
       abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(abi.encodePacked(
         '{"name": "', fullDomainName, '", ',
-        '"description": "', descriptions[msg.sender], '", ',
+        '"description": "', descriptions[_tldAddress], '", ',
         '"image": "', _getImage1(fullDomainName), '"}'))))
     );
     } else {
