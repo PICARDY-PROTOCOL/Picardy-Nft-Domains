@@ -33,7 +33,7 @@ router
   })
   .get(async (req, res) => {
     const proofDetails = req.body;
-    console.log(proofDetails);
+    //console.log(proofDetails);
     const zkP = proofDetails.proofBuffer;
     const vk = proofDetails.verifierKeyBuffer;
 
@@ -147,7 +147,5 @@ const generateProof = async (params) => {
     console.log(error);
   }
 };
-
-// verifyProof();
 
 export default router;

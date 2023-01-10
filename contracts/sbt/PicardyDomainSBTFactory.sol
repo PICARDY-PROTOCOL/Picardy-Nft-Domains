@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IForbiddenTlds} from "../interface/IForbiddenTlds.sol";
 import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
 import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
-import {IRandomNumberGen} from "../interface/IRandomNumberGen.sol";
 import {IPicardyDomainSBT} from "../interface/IPicardyDomainSBT.sol";
 import "./PicardyDomainSBT.sol";
 
@@ -18,8 +17,16 @@ import "./PicardyDomainSBT.sol";
 contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Context{
   using strings for string;
 
+  event RequestSent(uint256 requestId);
+
+  struct RandDetails{
+    uint256[] randomNumbers;
+    bytes32 nullifier;
+  }
+
   string[] public tlds; // existing TLDs
   mapping (string => address) public override tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
+  mapping(uint => RandDetails) private s_randDetails; 
 
   address public forbiddenTlds; // address of the contract that stores the list of forbidden TLDs
   address public metadataAddress; // default FlexiPunkMetadata address
@@ -59,10 +66,6 @@ contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Cont
   // READ
   function getTldsArray() public override view returns(string[] memory) {
     return tlds;
-  }
-
-  function getRandomNumberGen() public view returns(address){
-    return randomNumberAddress;
   }
 
   function _validTldName(string memory _name) view internal {
@@ -136,31 +139,47 @@ contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Cont
     return address(tld);
   }
 
-  function requestRandomNumber(uint32 numWords) external returns(uint256) {
-    IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
-    require(IERC20(linkToken).balanceOf(address(this)) >= randomNumberGen.fee() * 10**18, "Factory: Not enough LINK");
-    require(IERC20(linkToken).balanceOf(msg.sender) >= randomNumberGen.fee() * 10**18, "User: Not enough LINK");
-    IERC20(linkToken).transfer(address(this), randomNumberGen.fee());
-    uint256 requestId = randomNumberGen.requestRandomNumber(numWords);
-    return requestId;
-  }
+  // function requestRandomNumber(uint32 numWords) external {
+  //   IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
+  //   require(IERC20(linkToken).balanceOf(address(this)) >= randomNumberGen.fee() * 10**18, "Factory: Not enough LINK");
+  //   require(IERC20(linkToken).balanceOf(msg.sender) >= randomNumberGen.fee() * 10**18, "User: Not enough LINK");
+  //   IERC20(linkToken).transfer(address(this), randomNumberGen.fee());
+  //   uint256 requestId = randomNumberGen.requestRandomNumber(numWords);
+  //   emit RequestSent(requestId);
+  // }
 
-  //This function should be called by once. It changes the state of the random number generator
-  function getRandNumber(uint256 _requestId, string calldata _domainName, string calldata _tldName) external returns(uint256[] memory, bytes32) {
-    IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
-    IPicardyDomainSBT sbtDomain = IPicardyDomainSBT(tldNamesAddresses[_tldName]);
-    require(sbtDomain.getDomainHolder(_domainName) == msg.sender, "not domain holder");
-    (,uint256 _tokenId, , , ) = sbtDomain.domains(strings.lower(_domainName));
-    uint256[] memory randomNumbers = randomNumberGen.getRandomNumber(_requestId);
-    uint256 _seed;
-    if(_isEven(_tokenId)) {
-      _seed = randomNumbers[1];
-    } else {
-      _seed = randomNumbers[0];
-    }
-    (bytes32 nullifier, ) = sbtDomain.updateHasProof(_domainName, _seed);
-    return (randomNumbers, nullifier);
-  }
+  // function checkFulfilled(uint256 _requestId) external view returns(bool) {
+  //   IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
+  //   return randomNumberGen.checkFulfilled(_requestId);
+  // }
+
+  // //This function should be called by once. It changes the state of the random number generator
+  // function confirmRandNumber(uint256 _requestId, string calldata _domainName, string calldata _tldName) external {
+  //   IRandomNumberGen randomNumberGen = IRandomNumberGen(getRandomNumberGen());
+  //   IPicardyDomainSBT sbtDomain = IPicardyDomainSBT(tldNamesAddresses[_tldName]);
+  //   require(sbtDomain.getDomainHolder(_domainName) == msg.sender, "not domain holder");
+  //   (,uint256 _tokenId, , , ) = sbtDomain.domains(strings.lower(_domainName));
+  //   uint256[] memory randomNumbers = randomNumberGen.getRandomNumber(_requestId);
+  //   uint256 _seed;
+  //   if(_isEven(_tokenId)) {
+  //     _seed = randomNumbers[1];
+  //   } else {
+  //     _seed = randomNumbers[0];
+  //   }
+  //   (bytes32 nullifier, ) = sbtDomain.updateHasProof(_domainName, _seed);
+  //   s_randDetails[_requestId] = RandDetails({
+  //     nullifier: nullifier,
+  //     randomNumbers: randomNumbers
+  //   });
+  // }
+
+  // function randDetails( uint256 _requestId, string calldata _domainName, string calldata _tldName) external view returns(uint256[] memory, bytes32) {
+  //   IPicardyDomainSBT sbtDomain = IPicardyDomainSBT(tldNamesAddresses[_tldName]);
+  //   require(sbtDomain.getDomainHolder(_domainName) == msg.sender, "not domain holder");
+  //   uint256[] memory randomNumbers = s_randDetails[_requestId].randomNumbers;
+  //   bytes32 nullifier = s_randDetails[_requestId].nullifier;
+  //   return (randomNumbers, nullifier);
+  // }
 
   function _isEven(uint256 _tokenId) internal pure returns (bool) {
     if (_tokenId % 2 == 0) {
@@ -175,14 +194,6 @@ contract PicardyDomainSBTFactory is IPicardyDomainFactory, ReentrancyGuard, Cont
   /// @notice only hub admin can change the ForbiddenTlds contract address.
   function changeForbiddenTldsAddress(address _forbiddenTlds) external onlyHubAdmin {
     forbiddenTlds = _forbiddenTlds;
-  }
-
-  function addLinkToken(address _linkToken) external onlyHubAdmin {
-    linkToken = _linkToken;
-  }
-
-  function updateRandomNumberAddress(address _randNumAddr) external onlyHubAdmin {
-    randomNumberAddress = _randNumAddr;
   }
 
   /// @notice only hub admin can change the metadata contract address.

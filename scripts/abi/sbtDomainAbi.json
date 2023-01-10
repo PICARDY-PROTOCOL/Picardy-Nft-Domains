@@ -427,6 +427,11 @@
         "internalType": "string",
         "name": "data",
         "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasProof",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -541,6 +546,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_domainName",
+        "type": "string"
+      }
+    ],
+    "name": "getHasProof",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getOwner",
     "outputs": [
@@ -603,6 +627,11 @@
         "internalType": "address",
         "name": "_domainHolder",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_soulWallet",
+        "type": "address"
       }
     ],
     "name": "mint",
@@ -650,6 +679,25 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "nullifierExixt",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -788,6 +836,35 @@
     ],
     "name": "transferOwnership",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_domainName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_seed",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateHasProof",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   }

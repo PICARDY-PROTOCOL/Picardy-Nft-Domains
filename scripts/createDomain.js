@@ -5,11 +5,11 @@ const factoryAbi = require("./abi/factoryAbi.json");
 const forbiddenAbi = require("./abi/forbiddenAbi.json");
 
 const main = async () => {
-  const hubAddress = "0x718cFF78Fa43615cDF1c43415b9C7A63c8cA9814";
-  const factoryAddress = "0x311F7f66f35BA7242F1FE5ae0d45eD51145Fa688";
-  const sbtFactoryAddress = "0x71D60c6E3723a4a9Cc351cC28Cd2C818Bf19e2D2";
-  const forbiddenTldsAddress = "0x37DbCC4f8D5672Ae624d1c92d53a700790009a5E";
-  const metaDataAddress = "0x5E8Ef50EAF2237E037217298341458C66cC4836F";
+  const hubAddress = "0xB5C69bF93F608Ed7A06aeEFe428EdEcA7C5650Be";
+  const factoryAddress = "0x1DCa1A8372bc5883414E636222650EFB4418De14";
+  const sbtFactoryAddress = "0x7E70091180826d0c637DcE2a893885651361F1a3";
+  const forbiddenTldsAddress = "0x100E93e5fF95937380c3D8a0e581755D38bdBc0f";
+  const metaDataAddress = "0x7DAB5949B6C74FC31d6332eB5B42C948Dec5ACC9";
   const provider = new ethers.providers.JsonRpcProvider(
     process.env.HTTP_ENDPOINT
   );
@@ -30,9 +30,8 @@ const main = async () => {
   const wallet = new ethers.Wallet(privateKey, provider);
   const account = wallet.connect(provider);
   console.log("wallet address: ", account.address);
-
-  //const hub = new ethers.Contract(hubAddress, hubAbi, account);
-  //const addFactory = await hub.addFactory(factoryAddress);
+  const price = ethers.utils.parseEther("0.5");
+  //console.log(price);
 
   const picardyFactory = new ethers.Contract(
     factoryAddress,
@@ -46,40 +45,34 @@ const main = async () => {
     account
   );
 
-  // const forbiddenTlds = new ethers.Contract(
-  //   forbiddenTldsAddress,
-  //   forbiddenAbi,
-  //   account
+  const forbiddenTlds = new ethers.Contract(
+    forbiddenTldsAddress,
+    forbiddenAbi,
+    account
+  );
+
+  // const domain = await picardyFactory.ownerCreateTld(
+  //   ".chainlink",
+  //   "link",
+  //   account.address,
+  //   price,
+  //   true
   // );
+  // const recipt1 = await domain.wait();
+  // console.log("domain: ", await domain.hash);
+  // console.log("recipt1: ", recipt1);
 
-  // const txr = await forbiddenTlds.addFactoryAddress(factoryAddress);
-  // await txr.wait(2);
-
-  // const tx = await picardyFactory.toggleBuyingTlds();
-  // await tx.wait();
-  // console.log("toggleBuyingTlds: ", await tx.hash);
-
-  const createDomain = await picardyFactory.createTld(
-    ".blokness",
-    "BLKN",
-    "0xfFD7E682420eD0d3f6b9cf714e86FE48d89b1c7b",
-    0,
-    true
+  const changeMetadataAddress1 = await picardySBTFactory.changeMetadataAddress(
+    "0x55F57C210d5b7378A2465B5bf52400abA877A5Ec"
   );
-  const recipt = await createDomain.wait();
-  console.log("createDomain: ", await createDomain.hash);
-  //console.log("recipt: ", recipt);
+  await changeMetadataAddress1.wait();
 
-  const createSbtDoamin = await picardySBTFactory.createTld(
-    ".picardy",
-    ".3rd",
-    "0xfFD7E682420eD0d3f6b9cf714e86FE48d89b1c7b",
-    0,
-    true
+  const changeMetadataAddress = await picardyFactory.changeMetadataAddress(
+    "0x55F57C210d5b7378A2465B5bf52400abA877A5Ec"
   );
-  const recipt1 = await createSbtDoamin.wait();
-  console.log("createSbtDoamin: ", await createSbtDoamin.hash);
-  //console.log("recipt1: ", recipt1);
+  const recipt1 = await changeMetadataAddress.wait();
+  console.log("domain: ", await changeMetadataAddress.hash);
+  console.log("recipt1: ", recipt1);
 };
 
 main().catch((error) => {

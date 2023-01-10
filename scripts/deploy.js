@@ -7,6 +7,9 @@
 const hre = require("hardhat");
 
 async function main() {
+  const subId = 2552;
+  const keyHash =
+    "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f";
   //Import contracts to deploy
   const PicardyDomainFactory = await hre.ethers.getContractFactory(
     "PicardyDomainFactoryV2"
@@ -28,11 +31,19 @@ async function main() {
     "PicardySBTDomainResolver"
   );
 
+  const RandomNumberGen = await hre.ethers.getContractFactory(
+    "RandomNumberGen"
+  );
+
   const ForbiddenTlds = await hre.ethers.getContractFactory("ForbiddenTldsV2");
 
-  const metadataAddress = "0xea828d703DE8e98109FE2d1358Ab92b1E55bDCb4";
+  const metadataAddress = "0x7DAB5949B6C74FC31d6332eB5B42C948Dec5ACC9";
 
   const royaltyAddress = "0xfFD7E682420eD0d3f6b9cf714e86FE48d89b1c7b";
+
+  const randomNumberGen = await RandomNumberGen.deploy(subId, keyHash);
+  await randomNumberGen.deployed();
+  const randomNumberGenAddress = randomNumberGen.address;
 
   const picardyHub = await PicardyDomainHub.deploy(metadataAddress);
   await picardyHub.deployed();
@@ -76,12 +87,13 @@ async function main() {
   );
   await init.wait();
 
-  const toogle = await picardyFactory.toggleBuyingTlds();
-  await toogle.wait();
+  // const toogle = await picardyFactory.toggleBuyingTlds();
+  // await toogle.wait();
 
   console.log("picardyDomainHub deployed to: ", hubAddress);
   console.log("picardyDomainFactory deployed to: ", factoryAddress);
   console.log("forbiddenTlds deployed to: ", forbiddenTldsAddress);
+  console.log("randomNumberGen: ", randomNumberGenAddress);
 
   const picardySBTFactory = await picardyDomainSBTFactory.deploy(
     0,
@@ -101,16 +113,17 @@ async function main() {
   const sbtInit = await picardyHub.initSBT(picardySBTFactory.address);
   await sbtInit.wait();
 
-  const sbtToogle = await picardySBTFactory.toggleBuyingTlds();
-  await sbtToogle.wait();
+  // const sbtToogle = await picardySBTFactory.toggleBuyingTlds();
+  // await sbtToogle.wait();
 
   // Deployed to mumbai testnet
-  // resolver Address: 0x557ad8C374aE2663AF6db3d2cD4C42f79FcF0324
-  // domain Sbt resolver address: 0xc7b63c3F1212E063C386a2C05A171Db3217A99Ab
-  // picardyDomainHub deployed to:  0x718cFF78Fa43615cDF1c43415b9C7A63c8cA9814
-  // picardyDomainFactory deployed to:  0x311F7f66f35BA7242F1FE5ae0d45eD51145Fa688
-  // forbiddenTlds deployed to:  0x37DbCC4f8D5672Ae624d1c92d53a700790009a5E
-  // picardyDomainSBTFactory deployed to:  0x71D60c6E3723a4a9Cc351cC28Cd2C818Bf19e2D2
+  // resolver Address: 0x5caf1920EB5eDdD601b567c9103E151F07B7C913
+  // domain Sbt resolver address: 0x40109472983F8B073d1CFd0691C2d4c8D4999c0d
+  // picardyDomainHub deployed to:  0x86538155a314b32b74C3aF0815932ae9b67b4451
+  // picardyDomainFactory deployed to:  0x7F84060AE3FE6079ac2f3Eaa3E76D80488a2D236
+  // forbiddenTlds deployed to:  0x69FA38e838649692FC85B897f56cd396C499e41A
+  // randomNumberGen:  0x8648e96990C8A38f44E6AcD4252D9d1fFA4FB33e
+  // picardyDomainSBTFactory deployed to:  0x83446129408979a0C7e018cc161dbCe8Cef34f86
 }
 
 // We recommend this pattern to be able to use async/await everywhere
