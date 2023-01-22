@@ -49,7 +49,7 @@ describe("PicardyNftDomainFactory", function () {
     picardyDomainFactory.toggleBuyingTlds();
   });
 
-  it("user can create domain", async () => {
+  it("user can create domain & update description", async () => {
     const [hubAdmin, user1, user2, user3] = await ethers.getSigners();
     await picardyDomainFactory
       .connect(user1)
@@ -64,6 +64,16 @@ describe("PicardyNftDomainFactory", function () {
       .connect(user1)
       .getTldName(domainAddress);
     expect(domainName).to.equal(name);
+
+    await expect(
+      metadataContract
+        .connect(user2)
+        .changeDescription(domainAddress, "test domain")
+    ).to.be.rejectedWith(Error);
+
+    await metadataContract
+      .connect(user1)
+      .changeDescription(domainAddress, "test domain");
   });
 
   it("only HubAdmin can change forbidden tld address", async () => {

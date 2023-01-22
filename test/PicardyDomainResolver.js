@@ -142,4 +142,56 @@ describe("Picardy resolver test", function () {
     );
     //console.log(tokenUri);
   });
+
+  it("get factory array", async () => {
+    const [admin, user1, user2] = await ethers.getSigners();
+    const factories = await domainResolver.getFactoriesArray();
+    expect(factories[0]).to.be.equal(picardyDomainFactory.address);
+  });
+
+  it("get first deafault domain", async () => {
+    const [admin, user1, user2] = await ethers.getSigners();
+    expect(
+      await domainResolver.getFirstDefaultDomain(user1.address)
+    ).to.be.equal("user1name.test");
+  });
+
+  it("get tld address", async () => {
+    const [admin, user1, user2] = await ethers.getSigners();
+    expect(await domainResolver.getTldAddress(".test")).to.be.equal(
+      picardyDomain.address
+    );
+  });
+
+  it("get tld factoryAddress", async () => {
+    const [admin, user1, user2] = await ethers.getSigners();
+    expect(await domainResolver.getTldFactoryAddress(".test")).to.be.equal(
+      picardyDomainFactory.address
+    );
+  });
+
+  it("only hubAdmin add depricated tld address", async () => {
+    const [admin, user1, user2] = await ethers.getSigners();
+    await expect(
+      domainResolver
+        .connect(user1)
+        .addDeprecatedTldAddress(picardyDomain.address)
+    ).to.be.rejectedWith(Error);
+    await domainResolver.addDeprecatedTldAddress(picardyDomain.address);
+    await expect(
+      domainResolver
+        .connect(user1)
+        .removeDeprecatedTldAddress(picardyDomain.address)
+    ).to.be.rejectedWith(Error);
+    await domainResolver.removeDeprecatedTldAddress(picardyDomain.address);
+  });
+
+  it("only hubadmin can remove factory address", async () => {
+    const [admin, user1, user2] = await ethers.getSigners();
+    await expect(
+      domainResolver.connect(user1).removeFactoryAddress(0)
+    ).to.be.rejectedWith(Error);
+
+    await domainResolver.removeFactoryAddress(0);
+  });
 });
