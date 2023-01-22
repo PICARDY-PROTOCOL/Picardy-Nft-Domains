@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "../lib/strings.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import {IForbiddenTlds} from "../interface/IForbiddenTlds.sol";
 import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
@@ -17,6 +18,7 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
 
   string[] public tlds; // existing TLDs
   mapping (string => address) public override tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
+  mapping (address => string) public tldAddressesNames; // a mapping of TLDs (TLDaddress => string
 
   address public forbiddenTlds; // address of the contract that stores the list of forbidden TLDs
   address public metadataAddress; // default FlexiPunkMetadata address
@@ -120,11 +122,20 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
     forbidden.addForbiddenTld(_name);
 
     tldNamesAddresses[_name] = address(tld); 
+    tldAddressesNames[address(tld)] = _name;
     tlds.push(_name);
 
     emit TldCreated(_msgSender(), _tldOwner, _name, address(tld));
 
     return address(tld);
+  }
+
+  function getTldAddress(string memory _name) external view returns(address) {
+    return tldNamesAddresses[_name];
+  }
+
+  function getTldName(address _tldAddress) external view  returns(string memory) {
+    return tldAddressesNames[_tldAddress];
   }
 
   // OWNER
@@ -185,9 +196,21 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
     buyingEnabled = !buyingEnabled;
   }
 
+  function withdrawETH() external onlyHubAdmin {
+    (bool sent, ) = payable(_msgSender()).call{value: address(this).balance}("");
+    require(sent, "Failed to send ETH");
+  }
+
+  function withdrawERC20(address _token) external onlyHubAdmin {
+    IERC20 token = IERC20(_token);
+    token.transfer(_msgSender(), token.balanceOf(address(this)));
+  }
+
   
-function _isHubAdmain() internal {
+  function _isHubAdmain() internal {
         require(domainHub.checkHubAdmin(_msgSender()), "Not Hub Admin");
-    }
+  }
+
+  receive() external payable {}
 
 }

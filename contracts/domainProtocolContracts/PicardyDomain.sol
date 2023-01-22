@@ -176,10 +176,11 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
 
   function _sendPayment(uint _amount) internal {
     (address addr, uint percentage) = IPicardyDomainFactory(factoryAddress).getRoyaltyDetails();
+    uint percentageToBips = percentage * 100;
     
     if (percentage > 0 && percentage < 50) { 
       // send royalty - must be less than 50% 
-      (bool sentRoyalty, ) = payable(addr).call{value: ((_amount * percentage) / 100)}("");
+      (bool sentRoyalty, ) = payable(addr).call{value: ((_amount * percentageToBips) / 10000)}("");
       require(sentRoyalty, "Failed to send royalty hub owner");
     }
 

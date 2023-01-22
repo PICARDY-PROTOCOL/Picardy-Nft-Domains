@@ -4,8 +4,8 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("@openzeppelin/hardhat-upgrades");
 //require("@nomiclabs/hardhat-waffle");
-require("hardhat-gas-reporter");
-require("hardhat-contract-sizer");
+// require("hardhat-gas-reporter");
+// require("hardhat-contract-sizer");
 
 const dotenv = require("dotenv").config();
 const privateKey = process.env.PRIVATE_KEY;
@@ -61,15 +61,15 @@ module.exports = {
     ],
   },
 
-  contractSizer: {
-    alphaSort: true,
-    disambiguatePaths: false,
-    runOnCompile: true,
-    strict: true,
-  },
+  // contractSizer: {
+  //   alphaSort: true,
+  //   disambiguatePaths: false,
+  //   runOnCompile: true,
+  //   strict: true,
+  // },
 
-  gasReporter: {
-    currency: "USD",
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-  },
+  // gasReporter: {
+  //   currency: "USD",
+  //   coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+  // },
 };

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
 
 ///@title PicardyDomainFactoryV2
@@ -72,4 +73,14 @@ contract ForbiddenTldsV2 is Context {
   function _isHubAdmain() internal {
         require(domainHub.checkHubAdmin(_msgSender()), "Not Hub Admin");
     }
+
+    function withdrawERC20(address _tokenAddress) external onlyHubAdmin {
+        IERC20(_tokenAddress).transfer(msg.sender, IERC20(_tokenAddress).balanceOf(address(this)));
+    }
+
+    function withdrawETH() external onlyHubAdmin {
+        (bool success,) = payable(msg.sender).call{value: address(this).balance}("");
+        require(success, "Transfer failed.");
+    }
+  receive() external payable {}
 }

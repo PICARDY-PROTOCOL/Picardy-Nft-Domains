@@ -3,11 +3,13 @@ pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 ///@author blok-hamster
 contract PicardyDomainHub is AccessControlEnumerable {
 
     event FactoryAddressAdded(address indexed sender, address indexed fAddress);
+    event SbtFactoryAddressAdded(address indexed sender, address indexed fAddress);
    
     bytes32 public constant HUB_ADMIN_ROLE = keccak256("HUB_ADMIN_ROLE");
     address public factoryAddress;
@@ -34,8 +36,9 @@ contract PicardyDomainHub is AccessControlEnumerable {
         forbiddenTlds = _forbiddenTlds;
     }
 
-    function initSBT(address _fAddress) external onlyAdmin {
-        factoryAddress = _fAddress;
+    function initSBT(address _fAddress, address _forbiddenTlds) external onlyAdmin {
+        sbtFactoryAddress = _fAddress;
+        forbiddenTlds = _forbiddenTlds;
     }
 
     function getSBTFactoryAddress() external view returns(address) {
@@ -47,9 +50,14 @@ contract PicardyDomainHub is AccessControlEnumerable {
     }
 
 
-    function addFacroryAddress(address _factoryAddress) external onlyAdmin {
+    function addFactoryAddress(address _factoryAddress) external onlyAdmin {
        factoryAddress = _factoryAddress;
         emit FactoryAddressAdded(msg.sender, _factoryAddress);
+    }
+
+    function addSbtFactoryAddress(address _factoryAddress) external onlyAdmin {
+        sbtFactoryAddress = _factoryAddress;
+        emit SbtFactoryAddressAdded(msg.sender, _factoryAddress);
     }
 
   function addForbiddenTlds(address _forbiddenTlds) external onlyAdmin{
@@ -73,4 +81,15 @@ contract PicardyDomainHub is AccessControlEnumerable {
             return false;
         }
     }
+
+    function withdrawEth() external onlyAdmin {
+        payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function withdrawERC20(address _token) external onlyAdmin {
+        IERC20 token = IERC20(_token);
+        token.transfer(msg.sender, token.balanceOf(address(this)));
+    }
+
+    receive() external payable {}
 }
