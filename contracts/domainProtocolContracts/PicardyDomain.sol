@@ -6,6 +6,7 @@ import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
 import {IPicardyDomain} from "../interface/IPicardyDomain.sol";
 import "../lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -241,6 +242,16 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   function toggleBuyingDomains() external onlyOwner {
     buyingEnabled = !buyingEnabled;
     emit DomainBuyingToggle(_msgSender(), buyingEnabled);
+  }
+
+  function withdrawETH() external onlyOwner {
+    (bool sent, ) = payable(owner()).call{value: address(this).balance}("");
+    require(sent, "failed to withdraw");
+  }
+
+  function withdrawERC20(address _tokenAddress) external onlyOwner {
+    IERC20 token = IERC20(_tokenAddress);
+    token.transfer(owner(), token.balanceOf(address(this)));
   }
 
 }

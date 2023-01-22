@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
-
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
 import {IPicardyDomain} from "../interface/IPicardyDomain.sol";
 import {IPicardyDomainHub} from "../interface/IPicardyDomainHub.sol";
@@ -10,7 +9,7 @@ import "../lib/strings.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
-contract PicardyDomainResolver is Initializable, OwnableUpgradeable {
+contract PicardyDomainResolver is Initializable, ContextUpgradeable {
   using strings for string;
 
   mapping (address => bool) public isTldDeprecated; 
@@ -28,13 +27,16 @@ contract PicardyDomainResolver is Initializable, OwnableUpgradeable {
     _;
   }
 
-  function initialize() public initializer {
+  function initialize(address _hubAddress) public initializer {
+    addHubAddress(_hubAddress);
     __Context_init_unchained();
-    __Ownable_init_unchained();
   }
 
-  function addHubAddress(address _hubAddress) public {
-      require(_msgSender() == owner(), "only owner can add hub");
+  function updateHubAddress(address _hubAddress) public onlyHubAdmin {
+    addHubAddress(_hubAddress);
+  }
+
+  function addHubAddress(address _hubAddress) internal {
       hubAddress = _hubAddress;
       emit HubAdded(_msgSender());
   }

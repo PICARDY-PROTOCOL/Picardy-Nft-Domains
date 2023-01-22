@@ -1,8 +1,8 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
-    "txHash": "0x8a68834ebecd2e5208a8ff57a49df4ead2a77d6dfb5090e070991aadcc88929a"
+    "address": "0x3347B4d90ebe72BeFb30444C9966B2B990aE9FcB",
+    "txHash": "0x88df0d1fa76c408d668191190a1798e9dec63fb157c1a1f24a7235bc00a89f95"
   },
   "proxies": [
     {
@@ -23,6 +23,36 @@
     {
       "address": "0x5f3f1dBD7B74C6B46e8c44f98792A1dAf8d69154",
       "txHash": "0xf1e20ccc652229e3b744d0e559d1816636ff6f7b6bc8ac991f0da3cd85faf92e",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x3155755b79aA083bd953911C92705B7aA82a18F9",
+      "txHash": "0x2af0f7107ac1f7a35923cd8fd7601f7cedf41e7a8ca61259936af537cac4acbf",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x5fc748f1FEb28d7b76fa1c6B07D8ba2d5535177c",
+      "txHash": "0x27012ef16ea2d6b26da762ae21f86cc572d0d49df3bce92e27ce769623e40808",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x6F6f570F45833E249e27022648a26F4076F48f78",
+      "txHash": "0xd2d9569c16e32161bd3331aaf1a00f6474133e93a6fd1275d75855547f98f2e7",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x32EEce76C2C2e8758584A83Ee2F522D4788feA0f",
+      "txHash": "0x09ee5243e1d43788065383a345b92d3657e8a1b6119029c9731c91b774ecf9f5",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x4bf010f1b9beDA5450a8dD702ED602A104ff65EE",
+      "txHash": "0xcc0628a4ed4c85786b2b201c836819a0efb49f1b60f802066fd43b0b06731045",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xc582Bc0317dbb0908203541971a358c44b1F3766",
+      "txHash": "0x09cdf1c5a54cbdad397b3a586230fa2e71b20d4f780642933a96659e627cd168",
       "kind": "transparent"
     }
   ],
@@ -327,6 +357,94 @@
           "t_array(t_uint256)49_storage": {
             "label": "uint256[49]",
             "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "84f2ace4e301e61b20b770d5908fa7e05079fdbe1c2553100f14fad5e35aa96b": {
+      "address": "0x276C216D241856199A83bf27b2286659e5b877D3",
+      "txHash": "0x2e129061ac6bd6023459ee18102c7984d232f2ae7a7ea3590070773779109774",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "isTldDeprecated",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "PicardyDomainResolver",
+            "src": "contracts\\domainProtocolContracts\\PicardyDomainResolver.sol:15"
+          },
+          {
+            "label": "factories",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "PicardyDomainResolver",
+            "src": "contracts\\domainProtocolContracts\\PicardyDomainResolver.sol:16"
+          },
+          {
+            "label": "hubAddress",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_address",
+            "contract": "PicardyDomainResolver",
+            "src": "contracts\\domainProtocolContracts\\PicardyDomainResolver.sol:17"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
           },
           "t_array(t_uint256)50_storage": {
             "label": "uint256[50]",
