@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import { IPicardyDomainMetadata } from "../interface/IPicardyDomainMetadata.sol";
 import {IPicardyDomainFactory} from "../interface/IPicardyDomainFactory.sol";
 import {IPicardyDomain} from "../interface/IPicardyDomain.sol";
+import {IDomainImageContract} from "../interface/IDomainImageContract.sol";
 import "../lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -21,6 +22,7 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   address public metadataAddress; // Picardy Domain metadata contract address
   address public minter; // address which is allowed to mint domains even if contract is paused
   address public factoryAddress; // 
+  address imageAddress;
 
   bool public buyingEnabled = false; // buying domains enabled
   bool public buyingDisabledForever = false; // buying domains disabled forever
@@ -45,13 +47,14 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
     uint256 _domainPrice,
     bool _buyingEnabled,
     address _factoryAddress,
-    address _metadataAddress
+    address _metadataAddress,
+    address _imageAddress
   ) ERC721(_name, _symbol) {
     price = _domainPrice;
     buyingEnabled = _buyingEnabled;
     metadataAddress = _metadataAddress;
     factoryAddress = _factoryAddress;
-
+    imageAddress = _imageAddress;
     transferOwnership(_tldOwner);
   }
 
@@ -60,6 +63,10 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   // Domain getters - you can also get all Domain data by calling the auto-generated domains(domainName) method
   function getDomainHolder(string calldata _domainName) public override view returns(address) {
     return domains[strings.lower(_domainName)].holder;
+  }
+
+  function getImageAddress() external view returns(address){
+    return imageAddress;
   }
 
   function getDomainData(string calldata _domainName) public override view returns(string memory) {
@@ -211,6 +218,10 @@ contract PicardyDomain is IPicardyDomain, ERC721, Ownable, ReentrancyGuard {
   function changeMetadataAddress(address _metadataAddress) external onlyOwner {
     require(!metadataFrozen, "Cannot change metadata address anymore");
     metadataAddress = _metadataAddress;
+  }
+
+  function changeImageAddress(address _imageAddress) external onlyOwner{
+    imageAddress = _imageAddress;
   }
 
   function changeMinter(address _minter) external onlyOwner {

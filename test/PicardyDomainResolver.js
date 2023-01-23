@@ -37,6 +37,10 @@ describe("Picardy resolver test", function () {
     forbiddenTlds = await ForbiddenTld.deploy(picardyDomainHub.address);
 
     //import factory
+    const DomainImageContract = await ethers.getContractFactory(
+      "DomainImageContract"
+    );
+    let domainImageContract = await DomainImageContract.deploy();
     const PicardyDomainFactory = await ethers.getContractFactory(
       "PicardyDomainFactoryV2"
     );
@@ -45,7 +49,8 @@ describe("Picardy resolver test", function () {
       forbiddenTlds.address,
       metadataContract.address,
       picardyDomainHub.address,
-      royaltyAddress
+      royaltyAddress,
+      domainImageContract.address
     );
 
     const PicardyDomaiResolver = await ethers.getContractFactory(

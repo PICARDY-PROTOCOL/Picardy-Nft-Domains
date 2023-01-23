@@ -38,19 +38,22 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
 
   IPicardyDomainHub public domainHub;
   address royaltyAddress;
+  address domainImageAddress;
 
   constructor(
     uint256 _price, 
     address _forbiddenTlds,
     address _metadataAddress,
     address _domainHub,
-    address _royaltyAddress
+    address _royaltyAddress,
+    address _domainImageAddress
   ) {
     price = _price;
     forbiddenTlds = _forbiddenTlds;
     metadataAddress = _metadataAddress;
     domainHub = IPicardyDomainHub(_domainHub);
     royaltyAddress = _royaltyAddress;
+    domainImageAddress = _domainImageAddress;
   }
 
   // READ
@@ -115,7 +118,8 @@ contract PicardyDomainFactoryV2 is IPicardyDomainFactory, ReentrancyGuard, Conte
       _domainPrice, 
       _buyingEnabled,
       address(this),
-      metadataAddress
+      metadataAddress,
+      domainImageAddress
     );
 
     IForbiddenTlds forbidden = IForbiddenTlds(forbiddenTlds);

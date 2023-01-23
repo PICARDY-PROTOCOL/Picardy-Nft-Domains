@@ -32,6 +32,8 @@ interface IPicardyDomain is IERC721 {
   function getOwner() external view returns(address);
 
   function getDomainHolder(string calldata _domainName) external view returns(address);
+  
+  function getImageAddress() external view returns(address);
 
   function price() external view returns (uint256);
 
